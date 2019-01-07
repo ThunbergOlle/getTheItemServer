@@ -6,23 +6,11 @@ server.listen(80);
 let activePlayers = [];
 
 
-io.of("/lobby").on("connection", socket => {
-  console.log("A new player connected to the index page.");
-
-  socket.on("gameRoom", function(data) {
-    let username = data.username;
-    activePlayers.push({
-      username: username,
-      color: "color(255, 204, 0)",
-      isAdmin: false,
-      x: 0,
-      y: 0
-    });
-  });
-});
-io.of("/game").on("connection", socket => {
+io.of("/game").on("connection", (socket) => {
   console.log("Someone connected to the game");
-  socket.on("sendMyPosition", data => {
+  socket.on("sendMyPosition", (data) => {
+    console.log(activePlayers);
+
     if (activePlayers !== []) {
       for (let i = 0; i < activePlayers.length; i++) {
         if (activePlayers[i].username === data.username) {
@@ -32,6 +20,22 @@ io.of("/game").on("connection", socket => {
       }
     }
   });
+  socket.on("gameRoom", function(data) {
+    let username = data.username;
+    activePlayers.push({
+      username: username,
+      color: "color(255, 204, 0)",
+      isAdmin: false,
+      x: 0,
+      y: 0,
+      socketid: socket
+    });
+    console.log(activePlayers);
+  });
+  socket.on('disconnect', () => {
+    var i = activePlayers.indexOf(socket);
+    activePlayers.splice(i, 1);
+  });
 
   emitPlayers = () => {
     setTimeout(emitPlayers, 200);
@@ -39,3 +43,4 @@ io.of("/game").on("connection", socket => {
   };
   emitPlayers();
 });
+
